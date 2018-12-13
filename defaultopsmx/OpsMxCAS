@@ -1,0 +1,214 @@
+{
+ "appConfig": {},
+ "application": "defaultopsmx",
+ "id": "e2a2da98-0f2a-4672-9d80-818d7c3fe341",
+ "index": 0,
+ "keepWaitingPipelines": false,
+ "lastModifiedBy": "OpsMxUser",
+ "limitConcurrent": true,
+ "name": "OpsMxCAS",
+ "stages": [
+  {
+   "account": "my-k8s-v2-account",
+   "cloudProvider": "kubernetes",
+   "manifestArtifactAccount": "embedded-artifact",
+   "manifests": [
+    {
+     "apiVersion": "extensions/v1beta1",
+     "kind": "ReplicaSet",
+     "metadata": {
+      "name": "opsmx-v2cluster",
+      "namespace": "default"
+     },
+     "spec": {
+      "replicas": 1,
+      "selector": {
+       "matchLabels": {
+        "app": "opsmx-v2cluster",
+        "version": "1.0"
+       }
+      },
+      "template": {
+       "metadata": {
+        "labels": {
+         "app": "opsmx-v2cluster",
+         "version": "1.0"
+        }
+       },
+       "spec": {
+        "containers": [
+         {
+          "image": "docker.io/opsmx11/restapp:dev-auditrules-1.6.1",
+          "imagePullPolicy": "Always",
+          "name": "opsmx-app",
+          "ports": [
+           {
+            "containerPort": 8090,
+            "name": "http",
+            "protocol": "TCP"
+           },
+           {
+            "containerPort": 9090,
+            "name": "moniter",
+            "protocol": "TCP"
+           },
+           {
+            "containerPort": 8050,
+            "name": "audit",
+            "protocol": "TCP"
+           },
+           {
+            "containerPort": 8161,
+            "name": "ui",
+            "protocol": "TCP"
+           }
+          ]
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "apiVersion": "v1",
+     "kind": "Service",
+     "metadata": {
+      "name": "opsmxloadbal",
+      "namespace": "default"
+     },
+     "spec": {
+      "ports": [
+       {
+        "name": "canary",
+        "port": 8090,
+        "protocol": "TCP",
+        "targetPort": 8090
+       },
+       {
+        "name": "moniter",
+        "port": 9090,
+        "protocol": "TCP",
+        "targetPort": 9090
+       },
+       {
+        "name": "tomreport",
+        "port": 8161,
+        "protocol": "TCP",
+        "targetPort": 8161
+       },
+       {
+        "name": "audit",
+        "port": 8050,
+        "protocol": "TCP",
+        "targetPort": 8050
+       }
+      ],
+      "selector": {
+       "app": "opsmx-v2cluster"
+      },
+      "type": "LoadBalancer"
+     }
+    }
+   ],
+   "moniker": {
+    "app": "defaultopsmx"
+   },
+   "name": "Deploy (Manifest)",
+   "refId": "1",
+   "relationships": {
+    "loadBalancers": [],
+    "securityGroups": []
+   },
+   "requisiteStageRefIds": [],
+   "source": "text",
+   "type": "deployManifest"
+  },
+  {
+   "baseline": {},
+   "canary": {
+    "application": "defaultopsmx",
+    "canaryConfig": {
+     "canaryAnalysisConfig": {
+      "beginCanaryAnalysisAfterMins": "5",
+      "canaryAnalysisIntervalMins": "10",
+      "lookbackMins": 0,
+      "name": "metric-template:opsmx-cas-newrelic;log-template:logtemp1",
+      "notificationHours": [
+       1
+      ],
+      "useLookback": false
+     },
+     "canaryHealthCheckHandler": {
+      "@class": "com.netflix.spinnaker.mine.CanaryResultHealthCheckHandler",
+      "minimumCanaryResultScore": "50"
+     },
+     "canarySuccessCriteria": {
+      "canaryResultScore": "80"
+     },
+     "combinedCanaryResultStrategy": "AGGREGATE",
+     "lifetimeHours": "0.5",
+     "name": "OpsMxUser"
+    },
+    "canaryDeployments": [
+     {
+      "@class": ".CanaryTaskDeployment",
+      "baseline": "opsmx-v2cluster-v006",
+      "canary": "opsmx-v2cluster-v007",
+      "type": "query"
+     }
+    ],
+    "owner": "phani@opsmx.com",
+    "watchers": []
+   },
+   "name": "ACA-CAS",
+   "refId": "2",
+   "requisiteStageRefIds": [
+    "1"
+   ],
+   "type": "acaTask"
+  },
+  {
+   "continuePipeline": false,
+   "failPipeline": true,
+   "job": "canary_post_load",
+   "master": "opsmx-jenkins-master",
+   "name": "Load",
+   "parameters": {
+    "ACAAnalysisConfigName": "opsmxtemp",
+    "ACAAnalysisConfigUsername": "madhu",
+    "Baselinecluster": "opsmx-v2cluster-v001",
+    "Canarycluster": "opsmx-v2cluster-v002",
+    "LoadTime": "1800"
+   },
+   "refId": "7",
+   "requisiteStageRefIds": [
+    "1"
+   ],
+   "type": "jenkins"
+  },
+  {
+   "failPipeline": true,
+   "judgmentInputs": [],
+   "name": "Manual Judgment",
+   "notifications": [],
+   "refId": "8",
+   "requisiteStageRefIds": [
+    "2"
+   ],
+   "type": "manualJudgment"
+  },
+  {
+   "failPipeline": true,
+   "judgmentInputs": [],
+   "name": "Manual Judgment",
+   "notifications": [],
+   "refId": "9",
+   "requisiteStageRefIds": [
+    "8"
+   ],
+   "type": "manualJudgment"
+  }
+ ],
+ "triggers": [],
+ "updateTs": "1544106983927"
+}
