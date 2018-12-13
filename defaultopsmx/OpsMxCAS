@@ -207,8 +207,39 @@
     "8"
    ],
    "type": "manualJudgment"
+  },
+  {
+   "baseline": {},
+   "canary": {
+    "application": "defaultopsmx",
+    "canaryConfig": {
+     "canaryAnalysisConfig": {
+      "lookbackMins": 0,
+      "notificationHours": [],
+      "useLookback": false
+     },
+     "canaryHealthCheckHandler": {
+      "@class": "com.netflix.spinnaker.mine.CanaryResultHealthCheckHandler"
+     },
+     "name": "OpsMxCAS - Canary"
+    },
+    "canaryDeployments": [
+     {
+      "@class": ".CanaryTaskDeployment",
+      "type": "query"
+     }
+    ],
+    "owner": "OpsMxUser",
+    "watchers": []
+   },
+   "name": "ACA Task",
+   "refId": "10",
+   "requisiteStageRefIds": [
+    "9"
+   ],
+   "type": "acaTask"
   }
  ],
  "triggers": [],
- "updateTs": "1544106983927"
+ "updateTs": "1544704100428"
 }
